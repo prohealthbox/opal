@@ -4,9 +4,9 @@ The OPAL ecosystem has a rich array of re-usable Open Source plugins that can be
 units of functionality to build your application. This page lists some of the best available:
 
 ### opal.core.search
- 
-The Search plugin bundled with OPAL core provides a default database based search implementation 
-for your application, and is scheduled to provide hooks for e.g. using Elastic Search as your 
+
+The Search plugin bundled with OPAL core provides a default database based search implementation
+for your application, and is scheduled to provide hooks for e.g. using Elastic Search as your
 serach backend.
 
 ### opal.core.collaborative
@@ -23,19 +23,19 @@ and record types for running a BSAC OPAT clinic.
 ### opal-research
 
 The [Research](https://github.com/openhealthcare/opal-research) plugin allows an OPAL application to be used as the
-data collection method for multiple concurrent research studies, including researcher blinding, a 
+data collection method for multiple concurrent research studies, including researcher blinding, a
 structured role & permission framework.
 
 ### opal-walk-in
 
-The [Walk In](https://github.com/openhealthcare/opal-walk-in) plugin supports the operation of 
-drop in services within your institution, including registration, triage, escalation & 
+The [Walk In](https://github.com/openhealthcare/opal-walk-in) plugin supports the operation of
+drop in services within your institution, including registration, triage, escalation &
 discharge summaries.
 
 ### opal-wardround
 
 The [Wardround](https://github.com/openhealthcare/opal-wardround) plugin provides structured virtual
-ward rounds - sequential subsets of patients matching arbitrary criteria that the user may step 
+ward rounds - sequential subsets of patients matching arbitrary criteria that the user may step
 through in order.
 
 ### opal-dischargesummary
@@ -45,12 +45,12 @@ user to generate templated letters from the data concerning an episode already h
 
 ### opal-referral
 
-The [Referral](https://github.com/openhealthcare/opal-referral) plugin provides the plumbing for 
+The [Referral](https://github.com/openhealthcare/opal-referral) plugin provides the plumbing for
 building complex inter-team referrals within an institution.
 
 ### opal-dashboard
 
-The [Dashboard](https://github.com/openhealthcare/opal-dashboard) plugin allows for realtime clinical 
+The [Dashboard](https://github.com/openhealthcare/opal-dashboard) plugin allows for realtime clinical
 dashboards featuring arbitrary metrics, displayed within your application.
 
 ### opal-observations
@@ -70,3 +70,6 @@ guidelines in use at your institution when viewing records of patients whose con
 
 Can be used with national or local guidelines.
 
+### opal-iframe-api
+
+The [Iframe Api](https://github.com/openhealthcare/opal-iframe-api) plugin allows you to set up an api key. With this Api key you can create templates to view subrecords for embedding in for example iframes.
