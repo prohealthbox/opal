@@ -56,7 +56,7 @@ angular.module('opal.controllers').controller(
 			    };
 		    };
 
-		    $scope.$watch('editing.test', function(testName) {
+		    $scope.$watch('editing.microbiology_test.test', function(testName) {
 			    $scope.testType = $scope.microbiology_test_lookup[testName];
                 if( _.isUndefined(testName) || _.isUndefined($scope.testType) ){
                     return;
@@ -68,10 +68,10 @@ angular.module('opal.controllers').controller(
                             var field =  values[0];
                             var _default =  values[1];
                             var val = _default
-                            if($scope.editing[item.columnName][field]){
-                              val = $scope.editing[item.columnName][field]
+                            if($scope.editing.microbiology_test[field]){
+                              val = $scope.editing.microbiology_test[field]
                             }
-                            $scope.editing[field] =  val;
+                            $scope.editing.microbiology_test[field] =  val;
                         });
                 }
 		    });
