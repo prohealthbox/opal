@@ -9,8 +9,19 @@ import zipfile
 import functools
 import logging
 
+from django.db import models
+
 from opal.models import Episode
 from opal.core.subrecords import episode_subrecords, patient_subrecords
+
+# options, we can write to a seperate file, or we can write to the same place
+
+
+def extract_field(subrecord, field):
+    field_class = subrecord._meta.get_field(field)
+    if field_class == models.ManyToManyField:
+        pass
+    return unicode(getattr(subrecord, field)).encode('UTF-8')
 
 
 def subrecord_csv(episodes, subrecord, file_name):
@@ -18,6 +29,11 @@ def subrecord_csv(episodes, subrecord, file_name):
     Given an iterable of EPISODES, the SUBRECORD we want to serialise,
     write a csv file for the data in this subrecord for these episodes.
     """
+    # so lets just think this through
+    # get subrecord field will have to pull out everything from the related subrecord
+    # this is actually going to be like a nested csv which is going to be a pain
+    # but that works well looking at it as a nested csv
+    # so what we create an iterator and that's a parrelel jobby
     logging.info("writing for %s" % subrecord)
     with open(file_name, "w") as csv_file:
         writer = csv.writer(csv_file)
@@ -30,7 +46,7 @@ def subrecord_csv(episodes, subrecord, file_name):
         writer.writerow(field_names)
         subrecords = subrecord.objects.filter(episode__in=episodes)
         for sub in subrecords:
-            writer.writerow([unicode(getattr(sub, f)).encode('UTF-8') for f in field_names])
+            writer.writerow([extract_field(sub, f) for f in field_names])
     logging.info("finished writing for %s" % subrecord)
 
 

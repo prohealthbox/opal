@@ -13,7 +13,7 @@ from opal.core import exceptions
 from opal.models import Subrecord, Tagging, Team, Patient, InpatientAdmission
 from opal.core.test import OpalTestCase
 import opal.tests.test_patient_lists # To make sure test tagged lists are pulled in
-from opal.tests.models import FamousLastWords, PatientColour, ExternalSubRecord
+from opal.tests.models import FamousLastWords, PatientColour, ExternalSubRecord, HatWearer, Hat
 
 class PatientRecordAccessTestCase(OpalTestCase):
 
@@ -727,3 +727,25 @@ class ExternalSystemTestCase(OpalTestCase):
             ExternalSubRecord.get_modal_footer_template(),
             "partials/_sourced_modal_footer.html"
         )
+
+
+class TestExtractFields(OpalTestCase):
+    def setUp(self):
+        super(TestExtractFields, self).setUp()
+        self.bowler = Hat.objects.create(name="bower")
+        self.top = Hat.objects.create(name="hat")
+        self.cowboy = Hat.objects.create(name="cowboy")
+        _, self.episode = self.new_patient_and_episode_please()
+        self.one_hat = HatWearer.objects.create(episode=self.episode)
+        self.one_hat.hats.add(self.bowler)
+        self.two_hats = HatWearer.objects.create(episode=self.episode)
+        self.two_hats.hats.add(self.bowler, self.top)
+        self.no_hats = HatWearer.objects.create(episode=self.episode)
+
+    def test_get_headers(self):
+        result = HatWearer.get_extract_headers(HatWearer.objects.all())
+        print result
+
+    def test_get_values(self):
+        result = HatWearer.get_extract_values(HatWearer.objects.all())
+        print result

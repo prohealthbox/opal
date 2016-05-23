@@ -22,3 +22,7 @@ class LookupList(models.Model):
     @classmethod
     def get_api_name(cls):
         return cls.__name__.lower()
+
+    @classmethod
+    def get_extract_fields(cls, qs, exclude=None):
+        return ["name"]

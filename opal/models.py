@@ -13,7 +13,7 @@ import dateutil.parser
 from django.conf import settings
 from django.utils import timezone
 from django.db import models, transaction
-from django.db.models import Q
+from django.db.models import Q, Count, Max
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -40,6 +40,138 @@ class UpdatesFromDictMixin(object):
     Mixin class to provide the serialization/deserialization
     fields, as well as update logic for our JSON APIs.
     """
+    @classmethod
+    def is_many_to_many(cls, field):
+        return isinstance(field, (
+            models.fields.related.ManyToManyField, models.fields.related.ManyToManyRel
+        ))
+
+    @classmethod
+    def get_field_name(cls, field):
+        if isinstance(field, str):
+            return field
+        elif cls.is_many_to_many(field):
+            return field.name
+        else:
+            return field.attname
+
+    @classmethod
+    def get_fields(cls):
+        fields = cls._meta.get_fields(include_parents=True)
+
+        for field in fields:
+            name = field.attname
+            if name.endswith("_fk_id"):
+                yield field
+            elif name.endswith("_ft"):
+                continue
+            else:
+                yield field
+
+    @classmethod
+    def get_extract_fields(cls, queryset, exclude=None):
+        if exclude is None:
+            exclude = set()
+
+        fields = [i for i in cls.get_fields() if i not in exclude]
+
+        m2m_fields = [field for field in fields if cls.is_many_to_many(field)]
+
+        headers = []
+
+        for field in fields:
+            if field not in m2m_fields:
+                headers.append(field)
+
+        max_fields = {}
+
+        for field in m2m_fields:
+            field_name = field.name
+            max_field = queryset.annotate(
+                Count(field_name)
+            ).aggregate(Max("{}__count".format(field_name))).values()[0]
+            max_fields[field] = max_field
+
+        for field, max_field in max_fields.iteritems():
+            m2m_ids = queryset.values_list(
+                "{}__id".format(field.name), flat=True
+            )
+            related_qs = field.related_model.objects.filter(id__in=m2m_ids)
+            related_fields = field.related_model.get_extract_fields(
+                related_qs,
+                exclude=[field.related_query_name()]
+            )
+            for i in xrange(max_field):
+                for subfield in related_fields:
+                    headers.append([field, i, subfield])
+
+        return headers
+
+
+    @classmethod
+    def get_extract_headers(cls, queryset):
+        headers_fields = cls.get_extract_fields(queryset)
+
+        headers = []
+
+        for field in headers_fields:
+            if isinstance(field, list):
+                related_field, index, related_sub_field = field
+                headers.append("{0}_{1}_{2}".format(
+                    cls.get_api_name(), index, cls.get_field_name(related_sub_field)
+                ))
+            else:
+                headers.append(cls.get_field_name(field))
+        return headers
+
+
+    @classmethod
+    def get_extract_values(cls, queryset):
+        value_fields = cls.get_extract_fields(queryset)
+        response = []
+        for subrecord in queryset:
+            for field in value_fields:
+                row = []
+                if isinstance(field, list):
+                    related_field, index, related_sub_field = field
+                    related_qs = getattr(subrecord, related_field.attname).all()
+                    related_len = related_qs.count()
+                    for i in xrange(index):
+                        if i >= related_len:
+                            row.append("")
+                        else:
+                            row.append(getattr(related_qs[i], cls.get_field_name(related_sub_field)))
+            response.append(row)
+        return response
+
+    @classmethod
+    def get_field_names_to_extract(cls):
+        return cls.get_fields_to_extract(name=True)
+
+    def get_field_values_for_extract(self):
+        return self.__class__.get_fields_to_extract(model=self)
+
+    @classmethod
+    def get_fields_to_extract(cls, qs, name=False):
+        result = []
+
+        for field in cls.get_fields():
+            if cls.is_many_to_many(field):
+                for index, m2m_result in enumerate(field.related_model.get_fields_to_extract(name=name, model=model)):
+                    if name:
+                        result.append("{0}_{1}_{2}".format(
+                            cls.get_api_name(), index, m2m_result
+                        ))
+                    else:
+                        result.append(m2m_result)
+            else:
+                field_name = cls.get_field_name(field)
+                if name:
+                    result.append(field_name)
+                else:
+                    result.append(getattr(model, field_name))
+
+        return result
 
     @classmethod
     def _get_fieldnames_to_serialize(cls):
@@ -58,8 +190,11 @@ class UpdatesFromDictMixin(object):
             if f[:-6] in fieldnames:
                 continue
             fieldnames.append(f[:-6])
+            fieldnames.remove("{}_ft".format(f[:-6]))
+            fieldnames.remove("{}_fk_id".format(f[:-6]))
 
         fields = cls._meta.get_fields(include_parents=True)
+
         m2m = lambda x: isinstance(x, (
             models.fields.related.ManyToManyField, models.fields.related.ManyToManyRel
         ))
@@ -83,7 +218,9 @@ class UpdatesFromDictMixin(object):
                     if cls._get_field_type(fname) == ForeignKeyOrFreeText:
                         fieldnames.remove(fname + '_fk_id')
                         fieldnames.remove(fname + '_ft')
+
         return fieldnames
+
 
     @classmethod
     def _get_field_type(cls, name):
