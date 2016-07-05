@@ -62,17 +62,44 @@ angular.module('opal.services').service('FieldTranslater', function($rootScope){
     return subrecord;
   }
 
+  this.cleanEmptyStrings = function(fieldValue){
+    if(fieldValue && angular.isString(fieldValue)){
+      debugger;
+      var fieldValue = fieldValue.trim()
+      if(!fieldValue){
+          return undefined;
+      }
+    }
+
+    return fieldValue;
+  }
+
   this.translateJsToField = function(fieldMapping, fieldValue){
+      if(fieldMapping.name === "bp_systolic"){
+        debugger;
+      }
       if(fieldValue){
-        if(fieldMapping.type == 'date'){
+        if(fieldMapping.type === 'date'){
             if (!angular.isString(fieldValue)) {
                 fieldValue = moment(fieldValue);
                 fieldValue = fieldValue.format(DATE_FORMAT);
             }
-            return fieldValue;
+            return self.cleanEmptyStrings(fieldValue);
         }
-        else if(fieldMapping.type == 'date_time'){
-            return moment(fieldValue).format(DATETIME_FORMAT);
+        else if(fieldMapping.type === 'date_time'){
+            if (angular.isString(fieldValue)) {
+                fieldValue = self.cleanEmptyStrings(fieldValue);
+            }
+
+            if(fieldValue){
+              return moment(fieldValue).format(DATETIME_FORMAT);
+            }
+            else{
+              fieldValue = undefined;
+            }
+        }
+        else if(fieldMapping.type == 'integer' || fieldMapping.type == 'float'){
+            fieldValue = self.cleanEmptyStrings(fieldValue);
         }
       }
       return fieldValue;
