@@ -1091,3 +1091,24 @@ a.table-link:hover{
 .small-icon, .list-group-item .btn i.small-icon{
   font-size: 12px;
 }
+
+
+/* Temporary classes */
+.container.innerscroll,
+.container-fluid.innerscroll {
+    height: 100%;
+    overflow: hidden;
+}
+.panel-container.innerscroll {
+    height: 98%;
+    overflow: hidden;
+}
+.panel-container.innerscroll .panel-body.innerscroll {
+    overflow-x: hidden;
+    overflow-y: scroll;
+    height: 95%;
+}
+.panel-container .panel-heading h1,
+.panel-container .panel-heading h2 {
+  margin-top: 0px; margin-bottom: 0px;
+}
